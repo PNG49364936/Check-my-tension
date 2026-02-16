@@ -1,0 +1,119 @@
+<div class="page-wrapper-sm">
+
+  <%= link_to patient_path(@patient), class: "back-link" do %>
+    &larr; Retour au tableau de bord
+  <% end %>
+
+  <%# Titre contextuel selon le mode %>
+  <div style="margin-bottom:1.75rem;">
+    <% if @mode == "evening" %>
+      <p class="page-eyebrow">Compléter la journée</p>
+      <h1 class="page-title">Mesure du soir</h1>
+    <% else %>
+      <p class="page-eyebrow">Modification</p>
+      <h1 class="page-title">Modifier la mesure</h1>
+    <% end %>
+    <p class="page-subtitle">
+      <%= @patient.prenom %> <%= @patient.nom %>
+      &mdash;
+      <%= I18n.l(@tension_day.observation_date, format: :long) %>
+    </p>
+  </div>
+
+  <%# Rappel pédagogique pour le soir %>
+  <% if @mode == "evening" %>
+    <div class="info-box" style="margin-bottom:1.75rem;">
+      <div class="info-box-title">&#9790; Mesure du soir</div>
+      <p>
+        La mesure du soir complète celle du matin et permet de calculer votre
+        <strong>moyenne journalière</strong>, donnée clé pour votre médecin.
+        Mesurez-vous dans les mêmes conditions : au repos, assis confortablement.
+      </p>
+    </div>
+  <% end %>
+
+  <%# Formulaire %>
+  <div class="card-elevated" style="padding:2rem;">
+
+    <% if @tension_day.errors.any? %>
+      <div class="errors-box">
+        <ul>
+          <% @tension_day.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: [@patient, @tension_day], local: true do |f| %>
+
+      <%# Date (mode full uniquement) %>
+      <% if @mode != "evening" %>
+        <div class="form-group">
+          <%= f.label :observation_date, "Date d'observation", class: "form-label" %>
+          <%= f.date_field :observation_date, class: "form-input" %>
+        </div>
+        <hr class="form-divider">
+      <% end %>
+
+      <%# Mesure du matin (mode full uniquement) %>
+      <% if @mode != "evening" %>
+        <div class="time-section time-section-morning">
+          <div class="time-section-label morning">
+            <div class="time-icon time-icon-morning">&#9788;</div>
+            Mesure du matin
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <%= f.label :morning_systolic, "Systolique", class: "form-label" %>
+              <%= f.number_field :morning_systolic,
+                  min: 1, max: 299,
+                  class: "form-input" %>
+              <p class="form-hint">Chiffre du haut</p>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <%= f.label :morning_diastolic, "Diastolique", class: "form-label" %>
+              <%= f.number_field :morning_diastolic,
+                  min: 1, max: 299,
+                  class: "form-input" %>
+              <p class="form-hint">Chiffre du bas</p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Mesure du soir %>
+      <div class="time-section time-section-evening">
+        <div class="time-section-label evening">
+          <div class="time-icon time-icon-evening">&#9790;</div>
+          Mesure du soir
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group" style="margin-bottom:0;">
+            <%= f.label :evening_systolic, "Systolique", class: "form-label" %>
+            <%= f.number_field :evening_systolic,
+                min: 1, max: 299,
+                class: "form-input",
+                placeholder: "ex : 118" %>
+            <p class="form-hint">Chiffre du haut</p>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <%= f.label :evening_diastolic, "Diastolique", class: "form-label" %>
+            <%= f.number_field :evening_diastolic,
+                min: 1, max: 299,
+                class: "form-input",
+                placeholder: "ex : 76" %>
+            <p class="form-hint">Chiffre du bas</p>
+          </div>
+        </div>
+      </div>
+
+      <%= f.hidden_field :mode, value: @mode %>
+
+      <%= f.submit @mode == "evening" ? "Enregistrer la mesure du soir →" : "Mettre à jour →",
+          class: "btn btn-primary btn-full",
+          style: "margin-top:0.5rem;" %>
+    <% end %>
+  </div>
+
+</div>

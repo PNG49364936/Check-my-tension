@@ -1,0 +1,119 @@
+<div class="page-wrapper-sm">
+
+  <%= link_to patient_path(@patient), class: "back-link" do %>
+    &larr; Retour au tableau de bord
+  <% end %>
+
+  <%# Page title %>
+  <div style="margin-bottom:1.75rem;">
+    <p class="page-eyebrow">Nouvelle entrée</p>
+    <h1 class="page-title">Mesure du matin</h1>
+    <p class="page-subtitle"><%= @patient.prenom %> <%= @patient.nom %></p>
+  </div>
+
+  <%# Info pédagogique %>
+  <div class="info-box" style="margin-bottom:1.75rem;">
+    <div class="info-box-title">&#9432; Comment bien mesurer sa tension ?</div>
+    <p>
+      Mesurez-vous <strong>au repos</strong>, assis depuis 5 minutes, bras posé à hauteur du cœur.
+      Évitez café, tabac et effort physique dans les 30 min précédant la mesure.
+    </p>
+    <div class="info-values" style="margin-top:0.75rem;">
+      <div class="info-value-item">
+        <strong style="color:var(--forest-mid);">Systolique</strong>
+        <span>Pression max (contraction)</span>
+      </div>
+      <div class="info-value-item">
+        <strong style="color:var(--amber);">Diastolique</strong>
+        <span>Pression min (relâchement)</span>
+      </div>
+    </div>
+  </div>
+
+  <%# Formulaire %>
+  <div class="card-elevated" style="padding:2rem;">
+
+    <% if @tension_day.errors.any? %>
+      <div class="errors-box">
+        <ul>
+          <% @tension_day.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: [@patient, @tension_day], local: true do |f| %>
+
+      <%# Date %>
+      <div class="form-group">
+        <%= f.label :observation_date, "Date d'observation", class: "form-label" %>
+        <%= f.date_field :observation_date,
+            class: "form-input",
+            value: Date.today %>
+        <p class="form-hint">La date à laquelle vous prenez cette mesure.</p>
+      </div>
+
+      <hr class="form-divider">
+
+      <%# Mesure du matin %>
+      <div class="time-section time-section-morning">
+        <div class="time-section-label morning">
+          <div class="time-icon time-icon-morning">&#9788;</div>
+          Mesure du matin
+          <span style="font-size:0.75rem;font-family:'Source Serif 4',serif;font-weight:400;color:var(--text-light);font-style:italic;">(obligatoire)</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group" style="margin-bottom:0;">
+            <%= f.label :morning_systolic, "Systolique", class: "form-label" %>
+            <%= f.number_field :morning_systolic,
+                min: 1, max: 299,
+                class: "form-input",
+                placeholder: "ex : 120" %>
+            <p class="form-hint">Chiffre du haut (pression max)</p>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <%= f.label :morning_diastolic, "Diastolique", class: "form-label" %>
+            <%= f.number_field :morning_diastolic,
+                min: 1, max: 299,
+                class: "form-input",
+                placeholder: "ex : 80" %>
+            <p class="form-hint">Chiffre du bas (pression min)</p>
+          </div>
+        </div>
+      </div>
+
+      <%# Mesure du soir (optionnelle) %>
+      <div class="time-section time-section-evening">
+        <div class="time-section-label evening">
+          <div class="time-icon time-icon-evening">&#9790;</div>
+          Mesure du soir
+          <span style="font-size:0.75rem;font-family:'Source Serif 4',serif;font-weight:400;color:var(--text-light);font-style:italic;">(optionnel, à compléter plus tard)</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group" style="margin-bottom:0;">
+            <%= f.label :evening_systolic, "Systolique", class: "form-label" %>
+            <%= f.number_field :evening_systolic,
+                min: 1, max: 299,
+                class: "form-input",
+                placeholder: "ex : 118" %>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <%= f.label :evening_diastolic, "Diastolique", class: "form-label" %>
+            <%= f.number_field :evening_diastolic,
+                min: 1, max: 299,
+                class: "form-input",
+                placeholder: "ex : 76" %>
+          </div>
+        </div>
+      </div>
+
+      <%= f.submit "Enregistrer la mesure →",
+          class: "btn btn-primary btn-full",
+          style: "margin-top:0.5rem;" %>
+    <% end %>
+  </div>
+
+</div>

@@ -1,0 +1,210 @@
+<div class="page-wrapper-lg">
+
+  <%= link_to patient_path(@patient), class: "back-link" do %>
+    &larr; Retour au tableau de bord
+  <% end %>
+
+  <%# Header %>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <p class="page-eyebrow">Analyse</p>
+      <h1 class="page-title">Résultats</h1>
+      <p class="page-subtitle"><%= @patient.prenom %> <%= @patient.nom %></p>
+    </div>
+  </div>
+
+  <% if @tension_days.any? %>
+
+    <%# === SÉLECTION DES JOURS === %>
+    <%= form_with url: results_patient_tension_days_path(@patient), method: :get, local: true, id: "selection-form" do |f| %>
+      <div class="card" style="padding:1.75rem;margin-bottom:1.5rem;">
+
+        <div class="section-heading">
+          Sélectionner les jours à analyser
+          <div style="display:flex;gap:0.75rem;align-items:center;">
+            <button type="button" id="select-all"
+                    style="font-size:0.82rem;color:var(--forest);font-weight:600;border:none;background:none;cursor:pointer;padding:0.3rem 0.6rem;border-radius:4px;transition:background 0.15s;"
+                    onmouseover="this.style.background='rgba(26,58,46,0.08)'"
+                    onmouseout="this.style.background='none'">
+              Tout sélectionner
+            </button>
+            <span style="color:var(--border);">|</span>
+            <button type="button" id="deselect-all"
+                    style="font-size:0.82rem;color:var(--text-light);border:none;background:none;cursor:pointer;padding:0.3rem 0.6rem;border-radius:4px;transition:background 0.15s;"
+                    onmouseover="this.style.background='rgba(0,0,0,0.05)'"
+                    onmouseout="this.style.background='none'">
+              Tout désélectionner
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem;" id="day-checkboxes">
+          <% @tension_days.each do |day| %>
+            <label class="day-checkbox-label">
+              <input type="checkbox" name="day_ids[]" value="<%= day.id %>"
+                     <%= "checked" if @selected_days.include?(day) %>>
+              <span><%= I18n.l(day.observation_date, format: :default) %></span>
+              <% unless day.complete? %>
+                <span style="font-size:0.7rem;color:var(--amber);font-style:italic;">(incomplet)</span>
+              <% end %>
+            </label>
+          <% end %>
+        </div>
+
+        <%= f.submit "Analyser la sélection →",
+            class: "btn btn-primary",
+            style: "min-width:200px;" %>
+      </div>
+    <% end %>
+
+    <%# === TABLEAU DES RÉSULTATS === %>
+    <% if @selected_days.any? %>
+
+      <div style="background:var(--ivory);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-md);margin-bottom:1.5rem;">
+
+        <%# Table header with PDF export %>
+        <div style="background:var(--forest);padding:1.1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+          <div>
+            <h2 style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);margin:0;">
+              Tableau de résultats
+            </h2>
+            <p style="font-size:0.8rem;color:var(--sage-light);margin:0.2rem 0 0;font-style:italic;">
+              <%= @selected_days.count %> jour<%= @selected_days.count != 1 ? "s" : "" %> sélectionné<%= @selected_days.count != 1 ? "s" : "" %>
+            </p>
+          </div>
+          <%= form_with url: export_pdf_patient_tension_days_path(@patient), method: :post, local: true, class: "inline" do |f| %>
+            <% @selected_days.each do |day| %>
+              <input type="hidden" name="day_ids[]" value="<%= day.id %>">
+            <% end %>
+            <%= f.submit "&#128196; Exporter en PDF".html_safe,
+                class: "btn",
+                style: "background:rgba(255,255,255,0.12);color:var(--cream);border:1px solid rgba(255,255,255,0.25);font-size:0.85rem;" %>
+          <% end %>
+        </div>
+
+        <%# Responsive table wrapper %>
+        <div style="overflow-x:auto;">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th style="text-align:left;">Date</th>
+                <th>
+                  <span style="display:block;font-size:0.7rem;color:var(--sage-light);letter-spacing:0.05em;">MATIN</span>
+                  Syst.
+                </th>
+                <th>
+                  <span style="display:block;font-size:0.7rem;color:var(--sage-light);letter-spacing:0.05em;">MATIN</span>
+                  Diast.
+                </th>
+                <th>
+                  <span style="display:block;font-size:0.7rem;color:var(--amber-light);letter-spacing:0.05em;">SOIR</span>
+                  Syst.
+                </th>
+                <th>
+                  <span style="display:block;font-size:0.7rem;color:var(--amber-light);letter-spacing:0.05em;">SOIR</span>
+                  Diast.
+                </th>
+                <th>
+                  <span style="display:block;font-size:0.7rem;color:var(--sage);letter-spacing:0.05em;">MOY. JOUR</span>
+                  Syst.
+                </th>
+                <th>
+                  <span style="display:block;font-size:0.7rem;color:var(--sage);letter-spacing:0.05em;">MOY. JOUR</span>
+                  Diast.
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @selected_days.each do |day| %>
+                <tr>
+                  <td><%= I18n.l(day.observation_date, format: :long) %></td>
+                  <td style="color:var(--forest-mid);font-family:'DM Mono',monospace;"><%= day.morning_systolic || "—" %></td>
+                  <td style="color:var(--forest-mid);font-family:'DM Mono',monospace;"><%= day.morning_diastolic || "—" %></td>
+                  <td style="color:var(--amber);font-family:'DM Mono',monospace;"><%= day.evening_systolic || "—" %></td>
+                  <td style="color:var(--amber);font-family:'DM Mono',monospace;"><%= day.evening_diastolic || "—" %></td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:600;"><%= day.daily_systolic_average || "—" %></td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:600;"><%= day.daily_diastolic_average || "—" %></td>
+                </tr>
+              <% end %>
+            </tbody>
+
+            <% if @selected_days.size > 1 %>
+              <%
+                all_systolic  = @selected_days.map(&:daily_systolic_average).compact
+                all_diastolic = @selected_days.map(&:daily_diastolic_average).compact
+                all_morning_syst  = @selected_days.map(&:morning_systolic).compact
+                all_morning_diast = @selected_days.map(&:morning_diastolic).compact
+                avg_syst  = all_systolic.any?  ? (all_systolic.sum / all_systolic.size.to_f).round(1)  : nil
+                avg_diast = all_diastolic.any? ? (all_diastolic.sum / all_diastolic.size.to_f).round(1) : nil
+                min_syst  = all_morning_syst.any?  ? all_morning_syst.min  : nil
+                max_syst  = all_morning_syst.any?  ? all_morning_syst.max  : nil
+                min_diast = all_morning_diast.any? ? all_morning_diast.min : nil
+                max_diast = all_morning_diast.any? ? all_morning_diast.max : nil
+              %>
+              <tfoot>
+                <tr>
+                  <td>Moyenne globale</td>
+                  <td colspan="2" style="font-size:0.78rem;font-style:italic;color:var(--text-light);">
+                    Min : <%= min_syst || "—" %> / Max : <%= max_syst || "—" %>
+                  </td>
+                  <td colspan="2" style="font-size:0.78rem;font-style:italic;color:var(--text-light);">
+                    Min : <%= min_diast || "—" %> / Max : <%= max_diast || "—" %>
+                  </td>
+                  <td style="font-size:1.05rem;color:var(--forest);"><%= avg_syst || "—" %></td>
+                  <td style="font-size:1.05rem;color:var(--forest);"><%= avg_diast || "—" %></td>
+                </tr>
+              </tfoot>
+            <% end %>
+          </table>
+        </div>
+      </div>
+
+      <%# Légende interprétative %>
+      <div class="info-box">
+        <div class="info-box-title">&#9432; Interprétation des chiffres</div>
+        <p>La moyenne journalière est calculée sur les mesures matin et soir disponibles.</p>
+        <div class="info-values">
+          <div class="info-value-item">
+            <strong style="color:#2d7a3a;">Optimale</strong>
+            <span>&lt; 120/80 mmHg</span>
+          </div>
+          <div class="info-value-item">
+            <strong style="color:var(--amber);">Normale haute</strong>
+            <span>120–139 / 80–89</span>
+          </div>
+          <div class="info-value-item">
+            <strong style="color:var(--coral);">Hypertension</strong>
+            <span>&ge; 140/90 mmHg</span>
+          </div>
+        </div>
+      </div>
+
+    <% elsif params[:day_ids].present? %>
+      <div class="empty-state">
+        <div class="empty-state-title">Aucun jour sélectionné</div>
+        <div class="empty-state-text">Cochez des jours ci-dessus pour voir les résultats.</div>
+      </div>
+    <% end %>
+
+  <% else %>
+    <div class="empty-state">
+      <div class="empty-state-title">Aucune mesure disponible</div>
+      <div class="empty-state-text">Commencez par enregistrer des mesures depuis le tableau de bord.</div>
+      <div style="margin-top:1.25rem;">
+        <%= link_to new_patient_tension_day_path(@patient), class: "btn btn-primary" do %>
+          + Première mesure
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+</div>
+
+<script>
+  document.getElementById('select-all')?.addEventListener('click', function() {
+    document.querySelectorAll('#day-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = true);
+  });
+  document.getElementById('deselect-all')?.addEventListener('click', function() {
+    document.querySelectorAll('#day-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+  });
+</script>

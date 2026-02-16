@@ -1,0 +1,131 @@
+<div class="page-wrapper">
+
+  <%# Hero section %>
+  <section class="hero-section">
+    <p class="hero-subtitle">Votre compagnon de santé quotidien</p>
+    <h1 class="hero-title">Suivez votre<br><em>tension artérielle</em></h1>
+    <p style="color:var(--text-light);font-size:0.9rem;margin-top:0.75rem;font-style:italic;">
+      Enregistrez vos mesures matin et soir, consultez vos tendances, exportez vos données pour votre médecin.
+    </p>
+  </section>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;">
+
+    <%# COLONNE GAUCHE : Formulaire création patient %>
+    <div>
+      <div class="card-elevated" style="padding:2rem;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--forest);margin-bottom:0.35rem;">
+          Nouveau patient
+        </h2>
+        <p style="color:var(--text-light);font-size:0.85rem;font-style:italic;margin-bottom:1.5rem;">
+          Créez un profil pour commencer le suivi.
+        </p>
+
+        <%= form_with model: @patient, url: patients_path, local: false do |f| %>
+          <% if @patient.errors.any? %>
+            <div class="errors-box">
+              <ul>
+                <% @patient.errors.full_messages.each do |msg| %>
+                  <li><%= msg %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <div class="form-group">
+            <%= f.label :prenom, "Prénom", class: "form-label" %>
+            <%= f.text_field :prenom,
+                class: "form-input",
+                placeholder: "ex : Marie" %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :nom, "Nom de famille", class: "form-label" %>
+            <%= f.text_field :nom,
+                class: "form-input",
+                placeholder: "ex : Dupont" %>
+          </div>
+
+          <%= f.submit "Créer le profil →",
+              class: "btn btn-primary btn-full",
+              style: "margin-top:0.5rem;" %>
+        <% end %>
+      </div>
+    </div>
+
+    <%# COLONNE DROITE : Liste des patients %>
+    <div>
+      <div class="card-elevated" style="padding:2rem;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--forest);margin-bottom:0.35rem;">
+          Patients existants
+        </h2>
+        <p style="color:var(--text-light);font-size:0.85rem;font-style:italic;margin-bottom:1.5rem;">
+          Sélectionnez un profil pour accéder aux données.
+        </p>
+
+        <% if @patients.any? %>
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <% @patients.each do |patient| %>
+              <div class="patient-card-row">
+                <%= link_to patient_path(patient), class: "patient-card-link" do %>
+                  <div class="patient-card-info">
+                    <div class="patient-name"><%= patient.prenom %> <%= patient.nom %></div>
+                    <div class="patient-meta">
+                      <%= patient.tension_days.count %> mesure<%= patient.tension_days.count != 1 ? "s" : "" %> enregistrée<%= patient.tension_days.count != 1 ? "s" : "" %>
+                    </div>
+                  </div>
+                  <span class="patient-card-arrow">&rarr;</span>
+                <% end %>
+                <div class="patient-card-actions">
+                  <%= button_to "Supprimer", patient_path(patient),
+                      method: :delete,
+                      data: { turbo_confirm: "Supprimer le profil de #{patient.prenom} #{patient.nom} ainsi que toutes ses mesures ?" },
+                      class: "btn btn-danger btn-sm" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="empty-state" style="padding:2rem;">
+            <div class="empty-state-title">Aucun patient</div>
+            <div class="empty-state-text">Créez votre premier profil ci-contre.</div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Info pédagogique %>
+      <div class="info-box" style="margin-top:1.25rem;">
+        <div class="info-box-title">&#9829; Qu'est-ce que la tension artérielle ?</div>
+        <p>
+          La tension mesure la pression du sang dans vos artères.
+          Elle s'exprime en deux valeurs : la <strong>systolique</strong> (contraction du cœur)
+          et la <strong>diastolique</strong> (relâchement du cœur).
+        </p>
+        <div class="info-values">
+          <div class="info-value-item">
+            <strong>120/80</strong>
+            <span>Tension normale</span>
+          </div>
+          <div class="info-value-item">
+            <strong>&lt; 140/90</strong>
+            <span>Limite acceptable</span>
+          </div>
+          <div class="info-value-item">
+            <strong>&gt; 140/90</strong>
+            <span>Hypertension</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%# Override grid for mobile %>
+<style>
+  @media (max-width: 768px) {
+    .page-wrapper > div[style*="grid-template-columns"] {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>

@@ -1,0 +1,2 @@
+module TensionDaysHelper
+end

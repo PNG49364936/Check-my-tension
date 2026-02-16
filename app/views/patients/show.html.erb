@@ -1,0 +1,156 @@
+<div class="page-wrapper">
+
+  <%= link_to root_path, class: "back-link" do %>
+    &larr; Retour à l'accueil
+  <% end %>
+
+  <%# Page header %>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <p class="page-eyebrow">Tableau de bord patient</p>
+      <h1 class="page-title"><%= @patient.prenom %> <%= @patient.nom %></h1>
+      <p class="page-subtitle">
+        <%= @tension_days.count %> jour<%= @tension_days.count != 1 ? "s" : "" %> enregistré<%= @tension_days.count != 1 ? "s" : "" %>
+        <% complete_count = @tension_days.count(&:complete?) %>
+        &mdash; <%= complete_count %> complet<%= complete_count != 1 ? "s" : "" %>
+      </p>
+    </div>
+
+    <%# Action buttons %>
+    <div class="gap-actions">
+      <%= link_to new_patient_tension_day_path(@patient), class: "btn btn-primary" do %>
+        + Nouvelle mesure
+      <% end %>
+
+      <% if @incomplete_days.size == 1 %>
+        <%= link_to edit_patient_tension_day_path(@patient, @incomplete_days.first, mode: "evening"),
+            class: "btn btn-amber" do %>
+          &#9790; Compléter le soir
+        <% end %>
+      <% elsif @incomplete_days.size > 1 %>
+        <div style="position:relative;" data-controller="dropdown">
+          <button class="btn btn-amber" data-action="click->dropdown#toggle">
+            &#9790; Compléter le soir &darr;
+          </button>
+          <div class="dropdown-menu" data-dropdown-target="menu" style="display:none;">
+            <% @incomplete_days.each do |day| %>
+              <%= link_to edit_patient_tension_day_path(@patient, day, mode: "evening") do %>
+                <%= I18n.l(day.observation_date, format: :default) %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @tension_days.any? %>
+        <%= link_to results_patient_tension_days_path(@patient), class: "btn btn-success" do %>
+          &#9776; Voir les résultats
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Stats summary if data exists %>
+  <% if @tension_days.any? %>
+    <%
+      complete_days = @tension_days.select(&:complete?)
+      all_syst = complete_days.map(&:daily_systolic_average).compact
+      avg_syst_global = all_syst.any? ? (all_syst.sum / all_syst.size).round(0).to_i : nil
+      all_diast = complete_days.map(&:daily_diastolic_average).compact
+      avg_diast_global = all_diast.any? ? (all_diast.sum / all_diast.size).round(0).to_i : nil
+    %>
+    <% if avg_syst_global %>
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:2rem;">
+        <div class="stat-card">
+          <div class="stat-value text-mono"><%= avg_syst_global %></div>
+          <div class="stat-label">Moy. systolique</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value text-mono"><%= avg_diast_global %></div>
+          <div class="stat-label">Moy. diastolique</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value text-mono"><%= complete_days.size %></div>
+          <div class="stat-label">Jours complets</div>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%# Liste des jours %>
+  <% if @tension_days.any? %>
+    <h2 class="section-heading">
+      Mesures enregistrées
+    </h2>
+
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+      <% @tension_days.each do |day| %>
+        <div class="day-card <%= day.complete? ? '' : 'day-card-incomplete' %>">
+          <%# Header: date + badge %>
+          <div class="day-card-header">
+            <div class="day-card-date">
+              <%= I18n.l(day.observation_date, format: :long) %>
+            </div>
+            <% if day.complete? %>
+              <span class="complete-badge">Complet</span>
+            <% else %>
+              <span class="incomplete-badge">Soir manquant</span>
+            <% end %>
+          </div>
+
+          <%# Mesures %>
+          <div class="day-card-measures">
+            <% if day.morning_complete? %>
+              <span class="tension-badge tension-badge-morning">
+                &#9788; Matin : <strong class="text-mono"><%= day.morning_systolic %>/<%= day.morning_diastolic %></strong> mmHg
+              </span>
+            <% else %>
+              <span style="color:var(--text-light);font-size:0.85rem;font-style:italic;">Matin non renseigné</span>
+            <% end %>
+
+            <% if day.evening_complete? %>
+              <span class="tension-badge tension-badge-evening">
+                &#9790; Soir : <strong class="text-mono"><%= day.evening_systolic %>/<%= day.evening_diastolic %></strong> mmHg
+              </span>
+            <% else %>
+              <span style="color:var(--text-light);font-size:0.85rem;font-style:italic;">Soir non renseigné</span>
+            <% end %>
+
+            <% if day.daily_systolic_average %>
+              <span class="tension-badge tension-badge-avg">
+                &#8776; Moy : <strong class="text-mono"><%= day.daily_systolic_average %>/<%= day.daily_diastolic_average %></strong>
+              </span>
+            <% end %>
+          </div>
+
+          <%# Actions %>
+          <div class="day-card-actions">
+            <%= link_to edit_patient_tension_day_path(@patient, day, mode: "full"),
+                class: "btn btn-secondary",
+                style: "font-size:0.82rem;padding:0.4rem 0.9rem;" do %>
+              &#9998; Modifier
+            <% end %>
+            <%= link_to patient_tension_day_path(@patient, day),
+                data: { turbo_method: :delete, turbo_confirm: "Supprimer ce jour de mesure ?" },
+                class: "btn btn-danger",
+                style: "font-size:0.82rem;padding:0.4rem 0.9rem;" do %>
+              &#10005; Supprimer
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  <% else %>
+    <div class="empty-state">
+      <div class="empty-state-title">Aucune mesure enregistrée</div>
+      <div class="empty-state-text">Commencez par saisir votre première mesure du matin.</div>
+      <div style="margin-top:1.25rem;">
+        <%= link_to new_patient_tension_day_path(@patient), class: "btn btn-primary" do %>
+          + Première mesure
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+</div>

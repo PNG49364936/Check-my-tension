@@ -1,0 +1,112 @@
+fr:
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d %b"
+      long: "%d %B %Y"
+    day_names:
+      - dimanche
+      - lundi
+      - mardi
+      - mercredi
+      - jeudi
+      - vendredi
+      - samedi
+    abbr_day_names:
+      - dim
+      - lun
+      - mar
+      - mer
+      - jeu
+      - ven
+      - sam
+    month_names:
+      - ~
+      - janvier
+      - février
+      - mars
+      - avril
+      - mai
+      - juin
+      - juillet
+      - août
+      - septembre
+      - octobre
+      - novembre
+      - décembre
+    abbr_month_names:
+      - ~
+      - jan.
+      - fév.
+      - mars
+      - avr.
+      - mai
+      - juin
+      - juil.
+      - août
+      - sept.
+      - oct.
+      - nov.
+      - déc.
+    order:
+      - :day
+      - :month
+      - :year
+
+  time:
+    formats:
+      default: "%d %B %Y %H:%M"
+      short: "%d %b %H:%M"
+      long: "%A %d %B %Y %H:%M:%S"
+
+  activerecord:
+    errors:
+      messages:
+        record_invalid: "La validation a échoué : %{errors}"
+        restrict_dependent_destroy:
+          has_one: "Impossible de supprimer l'enregistrement car il existe un %{record} dépendant"
+          has_many: "Impossible de supprimer l'enregistrement car il existe des %{record} dépendants"
+      models:
+        patient:
+          attributes:
+            nom:
+              blank: "est obligatoire"
+            prenom:
+              blank: "est obligatoire"
+        tension_day:
+          attributes:
+            observation_date:
+              blank: "est obligatoire"
+              taken: "a déjà été utilisée pour ce patient"
+            morning_systolic:
+              not_an_integer: "doit être un nombre entier"
+              inclusion: "doit être entre 1 et 299"
+            morning_diastolic:
+              not_an_integer: "doit être un nombre entier"
+              inclusion: "doit être entre 1 et 299"
+            evening_systolic:
+              not_an_integer: "doit être un nombre entier"
+              inclusion: "doit être entre 1 et 299"
+            evening_diastolic:
+              not_an_integer: "doit être un nombre entier"
+              inclusion: "doit être entre 1 et 299"
+
+  activemodel:
+    errors:
+      messages:
+        blank: "est obligatoire"
+        taken: "a déjà été utilisé"
+        not_a_number: "doit être un nombre"
+        greater_than_or_equal_to: "doit être supérieur ou égal à %{count}"
+        less_than_or_equal_to: "doit être inférieur ou égal à %{count}"
+
+  helpers:
+    submit:
+      create: "Créer"
+      update: "Mettre à jour"
+      patient:
+        create: "Créer le patient"
+        update: "Modifier le patient"
+      tension_day:
+        create: "Enregistrer"
+        update: "Mettre à jour"
